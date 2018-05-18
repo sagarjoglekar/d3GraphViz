@@ -1,0 +1,295 @@
+<!-- START SIGMA IMPORTS -->
+<script src="sigma.min.js"></script>
+<script src="plugins/sigma.parsers.json.min.js"></script>
+<script src="plugins/sigma.layout.forceAtlas2.min.js"></script>
+<!-- END SIGMA IMPORTS -->
+<div id="container">
+  <style>
+    #graph-container {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+    }
+
+    #webgl {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+      color: #fff;
+      background: #000;
+      position: absolute;
+    }
+  </style>
+<div id="graph-container"></div>
+</div>
+<div id="webgl">
+    <div class="label">WebGL renderer + Camera 1</div>
+</div>
+
+<script>
+/**
+ * Just a simple example to show how to use the sigma.layout.forceAtlas2
+ * plugin:
+ *
+ * A random graph is generated, such that its nodes are separated in some
+ * distinct clusters. Each cluster has its own color, and the density of
+ * links is stronger inside the clusters. So, we expect the algorithm to
+ * regroup the nodes of each cluster.
+ */
+var i,
+    s,
+    o,
+    C = 2,
+    d = 0.5,
+    cs = [],
+    g = {
+      nodes: [],
+      edges: []
+    };
+
+var GlobalCompount = new Object()
+
+// Generate the graph:
+for (i = 0; i < 2; i++)
+  cs.push({
+    id: i,
+    nodes: [],
+    color: '#' + (
+      Math.floor(Math.random() * 16777215).toString(16) + '000000'
+    ).substr(0, 6)
+  });
+
+// cs = [{id: 0,nodes: [], color: '#111111'},{id: 1,nodes: [], color: '#FF0011'}]
+
+// for (i = 0; i < N; i++) {
+//   o = cs[(Math.random() * C) | 0];
+//   g.nodes.push({
+//     id: 'n' + i,
+//     label: 'Node' + i,
+//     x: 100 * Math.cos(2 * i * Math.PI / N),
+//     y: 100 * Math.sin(2 * i * Math.PI / N),
+//     size: Math.random(),
+//     color: o.color
+//   });
+//   o.nodes.push('n' + i);
+// }
+
+// for (i = 0; i < E; i++) {
+//   if (Math.random() < 1 - d)
+//     g.edges.push({
+//       id: 'e' + i,
+//       source: 'n' + ((Math.random() * N) | 0),
+//       target: 'n' + ((Math.random() * N) | 0)
+//     });
+//   else {
+//     o = cs[(Math.random() * C) | 0]
+//     g.edges.push({
+//       id: 'e' + i,
+//       source: o.nodes[(Math.random() * o.nodes.length) | 0],
+//       target: o.nodes[(Math.random() * o.nodes.length) | 0]
+//     });
+//   }
+// }
+
+// s = new sigma({
+//   graph: g,
+//   container: 'graph-container',
+//   settings: {
+//     drawEdges: true
+//   }
+// });
+
+
+// function editGraph(nodes, edges, membership){
+//   if (g.nodes.length != 0){
+//     missing = g.nodes.filter(function(n) {
+//       return nodes.indexOf(n) !== -1;
+//     });
+//     missingNodes = []
+//     for(i=0;i<missing.length;i++){
+//       missingNodes.push(g.nodes[i])
+//     }
+//     g.nodes.splice(missing, missing.length)
+//   }
+
+//   for (i = 0; i < nodes.length; i++) {
+//     if(membership.includes(nodes[i])){
+//       o = cs[1]
+//     }
+//     else{
+//       o = cs[0]
+//     }
+//     n = nodes[i]
+//     if(n=='N/A'){
+//       continue
+//     }
+//     g.nodes.push({
+//       id: n ,
+//       label: n ,
+//       x: 100 * Math.cos(2 * i * Math.PI / nodes.length),
+//       y: 100 * Math.sin(2 * i * Math.PI / nodes.length),
+//       size: 1,
+//       color: o.color
+//     });
+//     o.nodes.push(n);
+//   }
+
+//   for (i = 0; i < edges.length; i++) {
+//     if(edges[i][0]=='N/A' || edges[i][1] == 'N/A'){
+//       continue
+//     }
+//     g.edges.push({
+//       id: 'e' + i,
+//       source: edges[i][0],
+//       target: edges[i][1],
+//       size: edges[i][2]['weight']
+//     })
+//   }
+
+// }
+
+
+
+function editGraph(nodes, edges, membership){
+  return new Promise((resolve,reject) => {
+
+    if (g.nodes.length != 0){
+      missing = g.nodes.filter(function(n) {
+        return nodes.indexOf(n) !== -1;
+      });
+      missingNodes = []
+      for(i=0;i<missing.length;i++){
+        missingNodes.push(g.nodes[i])
+      }
+      g.nodes.splice(missing, missing.length)
+    }
+
+    for (i = 0; i < nodes.length; i++) {
+      if(membership.includes(nodes[i])){
+        o = cs[1]
+      }
+      else{
+        o = cs[0]
+      }
+      n = nodes[i]
+      if(n=='N/A'){
+        continue
+      }
+      // var ids = Object.keys(g.nodes).map(function(key){
+      //                   return g.nodes[key];
+      //               });
+      // if(ids[0].includes(n)){
+      //   continue
+      // }
+      g.nodes.push({
+        id: n ,
+        label: n ,
+        x: 100 * Math.cos(2 * i * Math.PI / nodes.length),
+        y: 100 * Math.sin(2 * i * Math.PI / nodes.length),
+        size: 1,
+        color: o.color
+      });
+      o.nodes.push(n);
+    }
+
+    for (i = 0; i < edges.length; i++) {
+      if(edges[i][0]=='N/A' || edges[i][1] == 'N/A'){
+        continue
+      }
+      g.edges.push({
+        id: 'e' + i,
+        source: edges[i][0],
+        target: edges[i][1],
+        size: edges[i][2]['weight']
+      })
+    }
+    resolve(g)
+  })
+}
+
+function loadFile(jsonName){
+  return new Promise((resolve,reject) => {
+    console.log("Loading File " + jsonName);
+    graph = sigma.parsers.json(jsonName,function(graph){
+      if (graph) {
+        resolve(graph)
+      } 
+      else {
+        console.error("Cannot load file")
+        reject()
+      }
+    })
+  })
+
+}
+
+function loadData(){
+  return new Promise((resolve,reject) => {
+    var nodesSlice = {}
+    var edgeSlice = {}
+    var GCmembers = {}
+
+    const NodesPromise = loadFile("data/BLF_SnapNodes.json"); 
+    NodesPromise.then(function(nodes){
+      nodesSlice = nodes
+    })
+
+    const EdgePromise = loadFile("data/BLF_SnapEdges.json"); 
+    EdgePromise.then(function(edges){
+      edgeSlice = edges
+    })
+
+    const GCPromise = loadFile("data/BLF_GiantCMembership.json"); 
+    GCPromise.then(function(GC){
+      nodesSlice = GC
+    })
+
+    Promise.all([NodesPromise,EdgePromise,GCPromise]).then(function(result){
+      resolve({'nodes':result[0] , 'edges': result[1] , 'GiantComponent':result[2]})
+    },function(){
+      console.error("One of more files not loaded ")
+    })
+  })  
+}
+
+function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+
+function renderGraphs(compoundObj,id){
+
+  editGraph(compoundObj['nodes'][id],compoundObj['edges'][id],compoundObj['GiantComponent'][id]).then(function(g){
+     s = new sigma({
+            graph: g,
+            container: document.getElementById('webgl'),
+            settings: {
+            drawEdges: true
+          }});
+      s.startForceAtlas2({worker: true, barnesHutOptimize: true , gravity: 0.01});
+      sleep(200).then(function(){s.stopForceAtlas2()})
+  })
+   
+
+}
+
+function mainLoop(){
+
+  loadDataProm = loadData()
+  loadDataProm.then(function(compoundObj){
+    GlobalCompount = compoundObj
+    renderGraphs(compoundObj,0)
+  })
+
+}
+
+mainLoop()
+
+
+// // // Start the ForceAtlas2 algorithm:
+
+</script>
