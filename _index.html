@@ -13,34 +13,92 @@
 }
 </style>
 <button id="generate">Save as SVG</button>
-<svg width="1024" height="768"></svg>
+<button type="button" id="switch-btn">Next Week</button>
+<svg id= "svg" width="1000" height="1000"></svg>
 <script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="https://raw.github.com/eligrey/FileSaver.js/master/Blob.js"></script>
-<script src="https://raw.github.com/eligrey/FileSaver.js/master/FileSaver.js"></script>
+<script src="plugins/FileSaver.min.js"></script>
+<script type="text/javascript" src="http://canvg.github.io/canvg/rgbcolor.js"></script> 
+<script type="text/javascript" src="http://canvg.github.io/canvg/StackBlur.js"></script>
+<script type="text/javascript" src="http://canvg.github.io/canvg/canvg.js"></script> 
 <script>
+var simulation
+
+//  graph data store
+var graph;
+
+//  state variable for current link set
+var firstLinks = true;
+
+
+
 var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
-    radius = 10;
+radius = 10;
 
 
 var color = d3.scaleOrdinal(d3.schemeCategory20);
 
-var simulation = d3.forceSimulation()
+simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
-    .force("charge", d3.forceManyBody().strength(-20))
-    .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("charge", d3.forceManyBody().strength(-2))
+    .force("center", d3.forceCenter(width / 2, height / 2))
 
 
-function circleColour(d){
-  if(d.group =="1"){
-    return "blue";
-  } else {
-    return "pink";
-  }
+//  follow v4 general update pattern
+function update() {
+    // Update link set based on current state
+    // DATA JOIN
+    link = link.data(firstLinks ? graph.links1 : graph.links2);
+
+    // EXIT
+    // Remove old links
+    link.exit().remove();
+
+    // ENTER
+    // Create new links as needed.  
+    link = link.enter().append("line")
+        .attr("class", "link")
+        .merge(link);
+
+    // DATA JOIN
+    node = node.data(graph.nodes);
+
+    // EXIT
+    node.exit().remove();
+
+    // ENTER
+    node = node.enter().append("circle")
+        .attr("class", "node")
+        .attr("r", 10)
+        .attr("fill", function(d) { return color(d.group); })
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended)
+        )
+        .merge(node);
+
+    //  Set nodes, links, and alpha target for simulation
+    simulation
+        .nodes(graph.nodes)
+        .on("tick", ticked);
+
+    simulation.force("link")
+        .links(firstLinks ? graph.links1 : graph.links2);
+
+    simulation.alphaTarget(0.3).restart();
 }
 
-d3.json("data/WeeklyJsons/120.json", function(error, graph) {
+function circleColour(d) {
+    if (d.group == "1") {
+        return "blue";
+    } else {
+        return "pink";
+    }
+}
+
+d3.json("data/WeeklyJsons/204.json", function(error, graph) {
     if (error) throw error;
 
     var link = svg.append("g")
@@ -105,20 +163,25 @@ function dragended(d) {
 d3.select("#generate")
     .on("click", writeDownloadLink);
 
-function writeDownloadLink(){
+function writeDownloadLink() {
     try {
         var isFileSaverSupported = !!new Blob();
     } catch (e) {
         alert("blob not supported");
     }
+    // var doctype = '<?xml version="1.0" standalone="no"?>' +
+    //     '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
 
-    var html = d3.select("svg")
-        .attr("title", "test2")
-        .attr("version", 1.1)
-        .attr("xmlns", "http://www.w3.org/2000/svg")
-        .node().parentNode.innerHTML;
-
-    var blob = new Blob([html], {type: "image/svg+xml"});
+    // var source = (new XMLSerializer()).serializeToString(d3.select('svg').node());
+    // var blob = new Blob([doctype + source], { type: 'image/svg+xml;charset=utf-8' });
+    simulation.stop()
+    canvg('canvas', d3.select('svg'));
+ 
+    // the canvas calls to output a png
+    var canvas = document.getElementById("canvas");
+    var img = canvas.toDataURL("image/png");
     saveAs(blob, "myProfile.svg");
+    simulation.start()
+
 };
 </script>
