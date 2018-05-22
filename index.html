@@ -15,6 +15,10 @@
 <button id="weekUpdate">Update week</button>
 <button id="generate">Save as PNG</button>
 <button id="nextWeek">Next Week</button>
+<form action="">
+  <input type="radio" name="communitySelect" onclick="handleClick(this);" value="BLF"> BLF <br>
+  <input type="radio" name="communitySelect" onclick="handleClick(this);" value="Asthma"> AsthmaUK <br>
+</form>
 <svg id="svg" width="1000" height="1000"></svg>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="plugins/simg.js"></script>
@@ -33,6 +37,22 @@ var firstLinks = true;
 var svg
 
 var color
+
+rootDirBLF = "data/WeeklyJsons/"
+rootDirAsthma = "data/WeeklyJsons_Asthma/"
+
+rootDir = rootDirBLF
+
+var currentValue = "BLF";
+function handleClick(communitySelect) {
+    currentValue = communitySelect.value;
+    if(currentValue == "BLF"){
+        rootDir = rootDirBLF
+    } else {
+        rootDir = rootDirAsthma
+    }
+    console.log(rootDir)
+}
 
 graphId = document.getElementById("weeknum").value
 
@@ -83,7 +103,7 @@ function loadGraph(clear=false) {
         .force("link", d3.forceLink().id(function(d) { return d.id; }))
         .force("charge", d3.forceManyBody().strength(-5))
         .force("center", d3.forceCenter(width / 2, height / 2))
-    file_name = "data/WeeklyJsons/" + graphId + ".json"
+    file_name = rootDir + graphId + ".json"
     drawGraph(file_name).then(function() {
         console.log("Loaded Graph" + file_name)
     })
@@ -181,7 +201,7 @@ function writeDownloadLink() {
     } catch (e) {
         alert("blob not supported");
     }
-    filename = "GraphSnapshot_" + graphId.toString()
+    filename = "GraphSnapshot_"+ currentValue + "_" + graphId.toString()
     simulation.stop()
     var simg = new Simg(document.getElementById("svg"));
 

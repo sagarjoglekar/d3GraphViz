@@ -1,0 +1,1 @@
+{"nodes": [{"group": 1, "id": "GDakK"}, {"group": 0, "id": "jDKXm"}, {"group": 1, "id": "9zabO"}, {"group": 0, "id": "5wGb5"}], "links": [{"source": "jDKXm", "target": "5wGb5", "value": 3}, {"source": "9zabO", "target": "GDakK", "value": 10}, {"source": "5wGb5", "target": "jDKXm", "value": 3}]}
